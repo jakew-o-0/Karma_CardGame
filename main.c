@@ -23,6 +23,7 @@ typedef struct node node_t;
 void push(node_t** head, card_t* new_card);   // pushes the newest node to the head of the list
 void remove_node(node_t** head, int pos);   //removes a node by value
 void generate_rand_hand(node_t** hand);
+void shuffle_deck(int* deck);
 
 
 static int deck[4][13] = {{1,2,3,4,5,6,7,8,9,10,11,12,13},  //1=ace, 11=jack, 12=queen, 13=king
@@ -38,6 +39,8 @@ int main(int argc, char** argv)
 {
     node_t* player_hand = (node_t*)malloc(sizeof(node_t));
     node_t* computer_hand = (node_t*)malloc(sizeof(node_t));
+
+    shuffle_deck();
     
     generate_rand_hand(&player_hand);
     generate_rand_hand(&computer_hand);
@@ -112,8 +115,33 @@ void push(node_t** head, card_t* new_card)
 void generate_rand_hand(node_t** hand)
 {
     card_t new_card;
-    int rand_card = rand() % 12;
-    int rand_suit = rand() % 4;
-
     
+    for(int i = 0; i < 4; i++)
+    {
+        int rand_suit = rand() % 3;
+        new_card.type = deck[rand_suit][i];
+        new_card.suit = rand_suit;
+
+        push(hand, &new_card);
+    }
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+void shuffle_deck()
+{
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; i < 13; i++)
+        {
+            int rand_pos = rand() % 12;
+            int tmp = deck[i][j];
+            deck[i][j] = deck[i][rand_pos];
+            deck[i][rand_pos] = tmp;
+        }
+    }
 }
