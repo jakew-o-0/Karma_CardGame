@@ -21,25 +21,23 @@ struct node
 typedef struct node node_t;
 
 
-struct table_hand
-{
-      card_t card;
-      int is_playable;
-};
-typedef struct table_hand table_hand_t ;
 
 
 
 void push(node_t** head, card_t* new_card);   // pushes the newest node to the head of the list
 void remove_node(node_t** head, int pos);   //removes a node by value
+void print_list(node_t* head);
+
+
+card_t random_card(int deck[4][13]);
 
 void generate_rand_hand(node_t** hand, int deck[4][13]);
 void shuffle_deck(int deck[4][13]);
-void generate_table_hand(table_hand_t* hand, int deck[4][13]);
 void initialise_table(card_t* table);
-card_t random_card(int deck[4][13]);
-void print_list(node_t* head);
-void select_hand(node_t* head, table_hand_t* up_hand[3], table_hand_t* down_hand[3]);
+
+node_t* select_hand(node_t* hand,node_t* up_hand,node_t* down_hand );
+int select_card(node_t* hand, card_t* table);
+int validate_card(card_t* card, card_t* table);
 
 
 
@@ -64,29 +62,28 @@ int main(int argc, char** argv)
       node_t* player_hand = (node_t*)malloc(sizeof(node_t));
       node_t* computer_hand = (node_t*)malloc(sizeof(node_t));
 
+      node_t* player_up_hand = (node_t*)malloc(sizeof(node_t));
+      node_t* computer_up_hand = (node_t*)malloc(sizeof(node_t));
+
+      node_t* player_down_hand = (node_t*)malloc(sizeof(node_t));
+      node_t* computer_down_hand = (node_t*)malloc(sizeof(node_t));
+
 
       shuffle_deck(&deck);
 
 
       //generate random hands for computer and player
-      //
-      generate_rand_hand(&player_hand, &deck);
-      generate_rand_hand(&computer_hand, &deck);
-
-
-      //generate random table hands for computer and player
       //up_hands will be visible to both player and computer
       //down hands will be invisible to both
       //
-      table_hand_t player_down_hand[3];
-      table_hand_t player_up_hand[3];
-      table_hand_t computer_down_hand[3];
-      table_hand_t computer_up_hand[3];
+      //generate_rand_hand(&player_hand, &deck);
+      generate_rand_hand(&computer_hand, &deck);
 
-      generate_table_hand(&player_down_hand, &deck);
-      generate_table_hand(&player_up_hand, &deck);
-      generate_table_hand(&computer_down_hand, &deck);
-      generate_table_hand(&computer_up_hand, &deck);
+      generate_rand_hand(&player_up_hand, &deck);
+      generate_rand_hand(&computer_up_hand, &deck);
+
+      generate_rand_hand(&player_down_hand, &deck);
+      generate_rand_hand(&computer_down_hand, &deck);
 
 
       //create a random starting card
@@ -95,19 +92,36 @@ int main(int argc, char** argv)
 
 
 
-
       
       //main game loop
       //
       int current_player = 0;      //0 = player, 1 = computer
+      int card_position;
+      node_t* current_hand;
+      card_t current_card;
+
       while(1)
       {
             printf("your hand:\n");
-            if(~(current_player))
+            if(~(current_player))   //player
             {
-                  select_hand(player_hand, &player_up_hand, &player_down_hand);
+                  current_hand = select_hand(player_hand, player_up_hand, player_down_hand);
+                  card_position = select_card(current_hand, &table, &current_card);
+
+                  if(card_position < 0)
+                  {
+                        printf("invalid position\n");
+                        return 0;
+                  }
+
+                  int card_to_play = validate_card(&current_card, &table);
+                  if(card_to_play)
+                  {
+                        play_card();
+                  }
+                  // pick up deck
             }
-            else
+            else  //computer
             {
                   print_list(computer_hand);
             }
@@ -128,31 +142,102 @@ int main(int argc, char** argv)
 
 
 
-void select_hand(node_t* head, table_hand_t* up_hand[3], table_hand_t* down_hand[3])
+node_t* select_hand(node_t* hand,node_t* up_hand,node_t* down_hand )
 {
-      int total_up = 0;
-      for(int i = 0; i < 3; i++)
-      {
-            total_up += up_hand[i]->is_playable;
-      }
 
-      if(head != NULL)
+      if(hand != NULL)
       {
-            print_list(head);
+            print_list(hand);
+            return hand;
+      }
+      else if(up_hand != NULL)
+      {
+            print_list(up_hand);
+            return up_hand;
       }
       else
       {
-            if(total_up > 0)
-            {
-                  //use up_hand
-            }
-            else
-            {
-                 //use down_hand 
-            }
+            print_list(down_hand);
+            return down_hand;
+      }
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+int select_card(node_t* hand, card_t* table, card_t* current_card)
+{
+      int selected_card_pos;
+      node_t* curent = hand;
+
+      printf("\n\nselect card by its position: ");
+      scanf("%d", selected_card_pos);
+      
+     while(curent->next != NULL)
+     {
+           if(curent->position == selected_card_pos)
+           {
+                 *current_card = curent->card;
+                 return curent->position;
+           }
+     } 
+
+     return -1;
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+//2,10,ace,7,8
+int validate_card(card_t* card, card_t* table)
+{
+      switch(card->type)
+      {
+            case 2: return 2;
+
+            case 10: return 10;
+
+            case 1: return 1;
+            
+            default:
+                  break;
       }
 
+      if(card->type > table->type)
+      {
+            if(card->type == 8)
+            {
+                  return 8;
+            }
+            else if(card->type == 7)
+            {
+                  return 7;
+            }
+
+            return card->type;
+      }
+      
+      return 0;
+           
 }
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
+void play_card(node_t hand, node_t table, int card, int pos)
+{
+
+}
+
 
 
 
@@ -180,7 +265,7 @@ void remove_node(node_t** head, int pos)
 
                         prev->next = current->next; // cut current out of the list
                         free(current);              // free currents memory
-                        return NULL;                // end func
+                        break;
 
                   }
                   else    // we are at the head of the list
@@ -189,7 +274,7 @@ void remove_node(node_t** head, int pos)
                         prev = (*head);
                         *head = (*head)->next;  //makes the head of the list the next item along
                         free(prev);             //frees the old head of list
-                        return NULL;
+                        break;
 
                   }
             }
@@ -245,13 +330,23 @@ void print_list(node_t* head)
 
             switch (curent->card.suit) 
             {
-                  case 0: printf("heart, ");
-                  case 1: printf("clubs, ");
-                  case 2: printf("diamonds, ");
-                  case 3: printf("spades, ");
+                  case 0: printf("heart, "); break;
+                  case 1: printf("clubs, "); break;
+                  case 2: printf("diamonds, "); break;
+                  case 3: printf("spades, "); break;
             }
 
-            printf("%d\n", curent->card.type);
+            switch (curent->card.type)
+            {
+                  case 1: printf("Ace\n"); break;
+                  case 11: printf("Jack\n"); break;
+                  case 12: printf("Queen\n"); break;
+                  case 13: printf("King\n"); break;
+            
+                  default: printf("%d\n", curent->card.type); break;
+            }
+
+            curent = curent->next;
       }
 }
 
@@ -267,11 +362,9 @@ void print_list(node_t* head)
 
 void generate_rand_hand(node_t** hand, int deck[4][13])
 {
-      card_t new_card;
-      srand(time(0));
-
       for(int i = 0; i < 3; i++)
       {
+            card_t new_card;
             new_card = random_card(deck);
             push(hand, &new_card);                 //add the new card to a node in the given hand
       }
@@ -303,26 +396,14 @@ void shuffle_deck(int deck[4][13])
 
 
 
-////////////////////////////////////////////////////////////
-
-
-
-void generate_table_hand(table_hand_t* hand, int deck[4][13])
-{
-      for(int i = 0; i < 3; i++)
-      {
-            hand[i].is_playable = 1;
-            hand[i].card = random_card(deck);
-      }
-}
-
-
-
 /////////////////////////////////////////////////////////////
+
+
+
 
 card_t random_card(int deck[4][13])
 {
-      srand(time(0)); 
+      srand(time(NULL)); 
       int rand_suit = rand() % 4;            //create a random suit
 
       int j = 0;
@@ -331,8 +412,8 @@ card_t random_card(int deck[4][13])
             j++;
       }
 
-      deck[rand_suit][j] = 0;
+      card_t rand_card = {deck[rand_suit][j], rand_suit};
+      deck[rand_suit][j] = 0;                         // make the used card 0 to prevent duplicate numbers
 
-      card_t rand_card = {j,rand_suit};
       return rand_card;
 }
