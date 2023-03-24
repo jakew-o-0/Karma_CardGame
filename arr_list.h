@@ -2,9 +2,16 @@
 #define _ARR_LIST_
 
 
-void append(int* list);
-void remove(int* list, int pos);
-void print(int* list);
+typedef enum suit {heart, spades, diamonds, clubs} suit_t;
+struct card
+{
+    int number;
+    suit_t suit;
+};
+typedef struct card card_t;
+
+void append(card_t* list, card_t* new_card, int len);
+void print(card_t* list);
 
 
 #endif
