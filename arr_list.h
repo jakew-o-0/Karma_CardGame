@@ -3,15 +3,28 @@
 
 
 typedef enum suit {heart, spades, diamonds, clubs} suit_t;
-struct card
+
+
+
+typedef struct card
 {
     int number;
     suit_t suit;
-};
-typedef struct card card_t;
+} card_t;
 
-void append(card_t* list, card_t* new_card, int len);
-void print(card_t* list);
+
+
+typedef struct node
+{
+      card_t card;
+      struct node* next;
+} node_t;
+
+
+
+void append(node_t* head, card_t new_card);
+void print(node_t* head);
+void remove_node(node_t* head, card_t card);
 
 
 #endif
